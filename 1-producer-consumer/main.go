@@ -17,10 +17,10 @@ func producer(stream Stream) (tweets []*Tweet) {
 	for {
 		tweet, err := stream.Next()
 		if err == ErrEOF {
-			return tweets
+			close(tweets)
+			return
 		}
-
-		tweets = append(tweets, tweet)
+		tweets <- tweet
 	}
 }
 
@@ -37,9 +37,9 @@ func consumer(tweets []*Tweet) {
 func main() {
 	start := time.Now()
 	stream := GetMockStream()
-
+	tweets := make(chan *Tweet)
 	// Producer
-	tweets := producer(stream)
+	go producer(stream, tweets)
 
 	// Consumer
 	consumer(tweets)
